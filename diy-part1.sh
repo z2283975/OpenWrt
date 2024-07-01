@@ -16,3 +16,16 @@
 # Add a feed source
 echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
+
+
+cd lede/package/lean
+rm -rf luci-theme-argon
+git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git luci-theme-argon
+make menuconfig #choose LUCI->Theme->Luci-theme-argon
+make -j1 V=s
+
+cd lede/package/lean
+rm -rf luci-app-argon-config # if have
+git clone -b 18.06 https://github.com/jerrykuku/luci-app-argon-config.git luci-app-argon-config
+make menuconfig #choose LUCI->Application->Luci-app-argon-config
+make -j1 V=s
