@@ -18,14 +18,13 @@ echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.defau
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 
 
-cd lede/package/lean
-rm -rf luci-theme-argon
-git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git luci-theme-argon
-make menuconfig #choose LUCI->Theme->Luci-theme-argon
-make -j1 V=s
+# Add luci-theme
+git clone --depth=1 -b 18.06 https://github.com/jerrykuku/luci-theme-argon
+git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config
+rm -rf ../../customfeeds/luci/themes/luci-theme-argon
+rm -rf ../../customfeeds/luci/themes/luci-theme-argon-mod
+rm -rf ./luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg
+cp -f $GITHUB_WORKSPACE/data/bg1.jpg luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg
+git clone https://github.com/DHDAXCW/theme
 
-cd lede/package/lean
-rm -rf luci-app-argon-config # if have
-git clone -b 18.06 https://github.com/jerrykuku/luci-app-argon-config.git luci-app-argon-config
-make menuconfig #choose LUCI->Application->Luci-app-argon-config
-make -j1 V=s
+
