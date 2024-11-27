@@ -35,6 +35,9 @@ function git_sparse_clone() {
 # 添加额外插件
 git_sparse_clone openwrt-23.05 https://github.com/coolsnowwolf/luci applications/luci-app-adguardhome
 
+# Add luci-app-poweroff
+git clone --depth=1 https://github.com/esirplayground/luci-app-poweroff
+
 # 科学上网插件
 git clone --depth=1 https://github.com/fw876/helloworld package/luci-app-ssr-plus
 git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall-packages package/openwrt-passwall
