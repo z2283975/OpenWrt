@@ -12,6 +12,12 @@ sed -i 's|/bin/login|/bin/login -f root|g' feeds/packages/utils/ttyd/files/ttyd.
 # 设置 root 用户密码为 password
 sed -i 's/root:::0:99999:7:::/root:$1$V4UetPzk$CYXluq4wUazHjmCDBCqXF.::0:99999:7:::/g' package/base-files/files/etc/shadow
 
+#更改默认主题
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-light/Makefile
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-nginx/Makefile
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-ssl-nginx/Makefile
+
 # 移除要替换的包+
 rm -rf feeds/packages/lang/golang
 rm -rf feeds/packages/net/alist
@@ -76,8 +82,12 @@ git_sparse_clone main https://github.com/linkease/istore luci
 git_sparse_clone master https://github.com/brvphoenix/luci-app-wrtbwmon luci-app-wrtbwmon
 git_sparse_clone master https://github.com/brvphoenix/wrtbwmon wrtbwmon
 
+
+
 # 取消主题默认设置
 find package/luci-theme-*/ -type f -name '*luci-theme-*' -print -exec sed -i '/set luci.main.mediaurlbase/d' {} \;
+
+
 
 # 调整 netdata 到 状态 菜单
 sed -i 's/system/status/g' feeds/luci/applications/luci-app-netdata/luasrc/controller/netdata.lua
