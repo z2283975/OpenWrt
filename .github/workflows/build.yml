@@ -45,13 +45,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-openwrt-
 
-      - name: 编译准备 & feeds
+      - name: 编译准备 & 执行diy
         run: |
           cd openwrt
           chmod +x diy.sh
           ./diy.sh
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
           make defconfig
 
       - name: 预下载源码（失败自动重试）
@@ -70,3 +68,4 @@ jobs:
         with:
           name: OpenWrt-Firmware
           path: openwrt/bin/targets/x86/64/
+
