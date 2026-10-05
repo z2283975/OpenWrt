@@ -1,38 +1,47 @@
 #!/bin/bash
-#=================================================
-# DIY script part1：feeds更新前，只配置源
-#=================================================
+set -e
 
-# 判断helloworld源不存在才追加，防止重复
-if ! grep -q "src-git helloworld" feeds.conf.default;then
-  echo "src-git helloworld https://gitee.com/fw876/helloworld.git" >> feeds.conf.default
-fi
+# 1. 拉取Lean OpenWrt源码
+git clone https://github.com/coolsnowwolf/lede openwrt
+cd openwrt
 
-# feeds替换清华镜像
-sed -i 's|https://git.openwrt.org/feed/packages.git|https://mirrors.tuna.tsinghua.edu.cn/openwrt/packages.git|g' feeds.conf.default
-sed -i 's|https://git.openwrt.org/project/luci.git|https://mirrors.tuna.tsinghua.edu.cn/openwrt/luci.git|g' feeds.conf.default
-sed -i 's|https://git.openwrt.org/feed/routing.git|https://mirrors.tuna.tsinghua.edu.cn/openwrt/routing.git|g' feeds.conf.default
-sed -i 's|https://git.openwrt.org/feed/telephony.git|https://mirrors.tuna.tsinghua.edu.cn/openwrt/telephony.git|g' feeds.conf.default
+# 2. 修改默认IP 192.168.10.1
+sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
 
-#=================================================
-# DIY script part2：执行feeds更新安装，生成feeds目录
-#=================================================
+# 3. 设置ROOT密码 zyy5715430..@
+sed -i 's/root::0:0:root:\/root:\/bin\/ash/root:$1$V4UetPzk$CYXluq4wUazHjmCDBCqXF.:0:0:root:\/root:\/bin\/ash/g' package/base-files/files/etc/shadow
+
+# 4. 添加插件源
+# Argon主题
+git clone https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
+# SSR-PLUS
+git clone https://github.com/fw876/helloworld package/helloworld
+
+# 5. 更新feeds
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
-# 修改默认LAN IP：192.168.1.1 → 192.168.10.1
-sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
-
-# 【方案：首次开机自动设置Argon主题，不再修改feeds下Makefile，规避文件不存在报错】
-mkdir -p package/base-files/files/etc/uci-defaults
-cat > package/base-files/files/etc/uci-defaults/99-set-argon << EOF
-uci set luci.main.mediaurlbase=/luci-static/argon
-uci commit luci
+# 6. 生成精简 .config x86_64 N5105 I226(igc网卡驱动)
+cat > .config <<EOF
+CONFIG_TARGET_x86=y
+CONFIG_TARGET_x86_64=y
+CONFIG_TARGET_x86_64_DEVICE_generic=y
+CONFIG_BUSYBOX_CUSTOM=y
+CONFIG_BUSYBOX_CONFIG_FEATURE_EDITING=y
+CONFIG_BUSYBOX_CONFIG_FEATURE_EDITING_SAVEHISTORY=y
+CONFIG_KMOD_NETWORK_SUPPORT=y
+CONFIG_PACKAGE_kmod-igc=y
+CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_luci-theme-argon=y
+CONFIG_PACKAGE_luci-app-ssr-plus=y
+CONFIG_PACKAGE_curl=y
+CONFIG_PACKAGE_wget=y
+CONFIG_PACKAGE_openssl-util=y
+CONFIG_PACKAGE_iptables-nft=y
 EOF
 
-# 设置root密码 zyy5715430..@
-ROOT_HASH='$6$rounds=5000$rV2Xg9sD7kLzQ8w1$BwG6nT5x9Pm2sR7aU3vZ1cX4yN8bD0jH5fK7gS9lW2eR4tY6uI0oP1aS3dF5gH7jK9lM0nB2vC4xZ6'
-sed -i "s|root::0:0:root:/root:/bin/sh|root:${ROOT_HASH}:0:0:root:/root:/bin/sh|g" package/base-files/files/etc/shadow
+# 7. 自动扩展.config依赖
+make defconfig
 
 
 
