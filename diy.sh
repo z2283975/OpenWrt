@@ -35,3 +35,5 @@ ROOT_HASH='$6$rounds=5000$rV2Xg9sD7kLzQ8w1$BwG6nT5x9Pm2sR7aU3vZ1cX4yN8bD0jH5fK7g
 sed -i "s|root::0:0:root:/root:/bin/sh|root:${ROOT_HASH}:0:0:root:/root:/bin/sh|g" package/base-files/files/etc/shadow
 
 
+
+
