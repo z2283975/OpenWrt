@@ -33,10 +33,6 @@ echo "====拉取SSR-Plus helloworld===="
 git clone --depth=1 https://github.com/fw876/helloworld package/helloworld || \
 git clone --depth=1 https://mirror.ghproxy.com/https://github.com/fw876/helloworld package/helloworld
 
-# 自动写入I226网卡PCI省电关闭，防止高负载断流
-echo "echo pcie_aspm=off >> /etc/bootcmd.d/01_disable_aspm" >> package/base-files/files/etc/rc.local
-
-
 # 更新feeds
 ./scripts/feeds update -a || ./scripts/feeds update -a
 ./scripts/feeds install -a
@@ -59,6 +55,9 @@ EOF
 
 make defconfig
 make clean
+
+# ======================新增：固件内置I226网卡优化，关闭PCI省电，防高负载断流======================
+echo "echo pcie_aspm=off >> /etc/bootcmd.d/01_disable_aspm" >> package/base-files/files/etc/rc.local
 
 
 
