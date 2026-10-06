@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
-# 克隆Lean Lede 23.05分支，原生5.15内核
+# 克隆Lean Lede 23.05分支，原生5.15内核，增加重试+镜像防128错误
 if [ ! -d openwrt ];then
-git clone --depth=1 -b 23.05 https://github.com/coolsnowwolf/lede openwrt
+  echo "尝试直接拉取lede 23.05分支"
+  git clone --depth=1 -b 23.05 https://github.com/coolsnowwolf/lede openwrt || \
+  git clone --depth=1 -b 23.05 https://mirror.ghproxy.com/https://github.com/coolsnowwolf/lede openwrt
 fi
 cd openwrt
 
@@ -45,6 +47,7 @@ CONFIG_LIBCURL_OPENSSL=y
 EOF
 make defconfig
 make clean
+
 
 
 
