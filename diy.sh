@@ -1,21 +1,10 @@
-
 #!/bin/bash
 set -e
-# 克隆Lean Lede源码（Lean只有master分支）
+# 克隆Lean Lede 23.05分支，原生5.15内核
 if [ ! -d openwrt ];then
-git clone --depth=1 https://github.com/coolsnowwolf/lede openwrt
+git clone --depth=1 -b 23.05 https://github.com/coolsnowwolf/lede openwrt
 fi
 cd openwrt
-
-# =====================【锁5.15内核 最稳妥版本】=====================
-sed -i 's/KERNEL_PATCHVER:=.*/KERNEL_PATCHVER:=5.15/' target/linux/x86/Makefile
-sed -i 's/LINUX_VERSION:=.*/LINUX_VERSION:=5.15/' include/kernel-version.mk
-# 关闭自动更新内核版本，防止源码覆盖
-sed -i '/update_kernel_versions/d' include/toplevel.mk
-# 打印内核版本，方便看日志确认是否修改成功
-echo "==== 当前锁定内核版本 ===="
-grep -E "KERNEL_PATCHVER|LINUX_VERSION" target/linux/x86/Makefile include/kernel-version.mk
-# ===================================================================
 
 # 修改默认网关IP：192.168.10.1
 sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
@@ -56,6 +45,7 @@ CONFIG_LIBCURL_OPENSSL=y
 EOF
 make defconfig
 make clean
+
 
 
 
