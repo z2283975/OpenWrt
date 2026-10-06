@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
-# 克隆Lean Lede，切换到原生5.15内核历史快照
+# Lean Lede 5.15快照，优化克隆方式，避免完整大仓库下载导致exit128
 if [ ! -d openwrt ];then
-  echo "克隆Lean Lede源码"
-  git clone https://github.com/coolsnowwolf/lede openwrt || \
-  git clone https://mirror.ghproxy.com/https://github.com/coolsnowwolf/lede openwrt
+  echo "浅克隆lede，单独拉取目标5.15快照commit"
+  git clone --depth=1 https://github.com/coolsnowwolf/lede openwrt || \
+  git clone --depth=1 https://mirror.ghproxy.com/https://github.com/coolsnowwolf/lede openwrt
 fi
 cd openwrt
-# 切换到5.15内核快照提交
+# 单独拉取我们需要的旧commit
+git fetch --unshallow f221abf682d721f60e228f67eb4c94c32b5dd72c
 git checkout f221abf682d721f60e228f67eb4c94c32b5dd72c
 
 # 修改LAN管理地址 192.168.10.1
@@ -56,8 +57,9 @@ EOF
 make defconfig
 make clean
 
-# ======================新增：固件内置I226网卡优化，关闭PCI省电，防高负载断流======================
+# 固件内置I226网卡优化，关闭PCI省电，防高负载断流
 echo "echo pcie_aspm=off >> /etc/bootcmd.d/01_disable_aspm" >> package/base-files/files/etc/rc.local
+
 
 
 
