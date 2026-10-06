@@ -1,41 +1,44 @@
+
 #!/bin/bash
 set -e
-
-# 克隆Lean Lede源码（Lean只有master分支，删除错误的23.05切换）
+# 克隆Lean Lede源码（Lean只有master分支）
 if [ ! -d openwrt ];then
 git clone --depth=1 https://github.com/coolsnowwolf/lede openwrt
 fi
 cd openwrt
 
+# =====================【锁5.15内核 最稳妥版本】=====================
+sed -i 's/KERNEL_PATCHVER:=.*/KERNEL_PATCHVER:=5.15/' target/linux/x86/Makefile
+sed -i 's/LINUX_VERSION:=.*/LINUX_VERSION:=5.15/' include/kernel-version.mk
+# 关闭自动更新内核版本，防止源码覆盖
+sed -i '/update_kernel_versions/d' include/toplevel.mk
+# 打印内核版本，方便看日志确认是否修改成功
+echo "==== 当前锁定内核版本 ===="
+grep -E "KERNEL_PATCHVER|LINUX_VERSION" target/linux/x86/Makefile include/kernel-version.mk
+# ===================================================================
+
 # 修改默认网关IP：192.168.10.1
 sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
-
 # 设置root密码 zyy5715430..@
 sed -i 's/root:::0:0:root:\/root:\/bin\/ash/root:$1$V4UetPzk$CYXluq4wUazHjmCDBCqXF.:0:0:root:\/root:\/bin\/ash/g' package/base-files/files/etc/shadow
-
 # 清理旧插件目录，防止多次编译残留冲突
 rm -rf package/luci-theme-argon package/helloworld
-
 # 增加git超时配置，防止长时间连接断开
 git config --global http.lowSpeedLimit 0
 git config --global http.lowSpeedTime 999999
-
 # Argon主题 多镜像轮换
 echo "====拉取Argon主题===="
 git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon || \
 git clone --depth=1 shturl.cc/pd56q8RGr0wzoTbjpSeh2TWwph5hTrNQ6j61uxl2l3eZKCVsQNieo2 package/luci-theme-argon || \
 git clone --depth=1 https://mirror.ghproxy.com/https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
-
 # SSR-Plus helloworld 多镜像轮换，重点修复429限流
 echo "====拉取SSR-Plus(helloworld)===="
 git clone --depth=1 https://github.com/fw876/helloworld package/helloworld || \
 git clone --depth=1 shturl.cc/fhlgvUr824zWY6HuzgXQ1UiTjdzFCYNpKZJVfLSJqGLR package/helloworld || \
 git clone --depth=1 https://mirror.ghproxy.com/https://github.com/fw876/helloworld package/helloworld
-
 # 更新feeds
 ./scripts/feeds update -a || ./scripts/feeds update -a
 ./scripts/feeds install -a
-
 # 精简.config x86_64 N5105 I226 igc网卡驱动
 cat > .config <<EOF
 CONFIG_TARGET_x86=y
@@ -51,10 +54,8 @@ CONFIG_PACKAGE_openssl-util=y
 CONFIG_PACKAGE_iptables-nft=y
 CONFIG_LIBCURL_OPENSSL=y
 EOF
-
 make defconfig
 make clean
-
 
 
 
