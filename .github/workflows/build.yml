@@ -1,50 +1,37 @@
 name: Build OpenWrt
+
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
     steps:
-      - name: 检出仓库代码
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 深度清理磁盘，释放空间
+      - name: Install Dependencies
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/setup-haskell
-          sudo rm -rf /var/lib/apt/lists/*
-          df -h
+          sudo apt update
+          sudo apt install -y build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip python3 python3-pip
 
-      - name: 安装编译依赖（带重试）
-        run: |
-          for i in {1..3}; do
-            sudo apt update && sudo apt install -y build-essential libncurses-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf git wget curl rsync unzip python3 python3-setuptools python3-dev file && break
-            echo "apt安装失败，等待15秒重试 $i"
-            sleep 15
-          done
-
-      - name: 执行 diy.sh
+      - name: Run diy.sh
         run: |
           chmod +x diy.sh
           ./diy.sh
 
-      - name: 缓存源码下载包 dl
-        uses: actions/cache@v4
-        with:
-          path: openwrt/dl
-          key: ${{ runner.os }}-openwrt-x8664-dl-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-openwrt-x8664-dl-
-
-      - name: 编译固件
+      - name: Compile firmware
         run: |
           cd openwrt
           make -j$(nproc) V=s
 
-      - name: 上传编译好的固件
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: OpenWrt-x86_64-N5105-I226
-          path: openwrt/bin/targets/x86/64
+          name: OpenWrt-x86_64-N5105
+          path: openwrt/bin/targets/x86/64/*.img
+
 
 
