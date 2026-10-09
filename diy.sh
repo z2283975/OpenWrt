@@ -68,3 +68,12 @@ echo "echo pcie_aspm=off >> /etc/bootcmd.d/01_disable_aspm" >> package/base-file
 
 
 
+
+
+
+
+
+
+
+
+
