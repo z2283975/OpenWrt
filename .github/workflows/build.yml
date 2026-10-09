@@ -15,12 +15,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
-      # 这里切换源码仓库和分支
       REPO_URL: https://github.com/coolsnowwolf/lede.git
       REPO_BRANCH: master
-      # 如果想用官方 OpenWrt 的 5.15 分支，可改成：
-      # REPO_URL: https://git.openwrt.org/openwrt/openwrt.git
-      # REPO_BRANCH: openwrt-22.03
       KERNEL_VERSION: "5.15"
 
     steps:
@@ -50,24 +46,36 @@ jobs:
         run: |
           git clone --depth 1 "$REPO_URL" -b "$REPO_BRANCH" openwrt
 
-      - name: Apply config.seed
+      # 先更新/安装 feeds，单独成 step，失败时能精确定位
+      - name: Update feeds
         run: |
-          cp config.seed openwrt/.config
           cd openwrt
           ./scripts/feeds update -a
-          ./scripts/feeds install -a
-          make defconfig
+          ./scripts/feeds install -a || true   # 容忍个别包安装告警的非0退出
 
+      # 再放 config.seed（feeds 之后就不会被覆盖）
+      - name: Apply config.seed
+        run: |
+          cd openwrt
+          cp -f ../config.seed .config
+
+      # diy.sh 在 defconfig 之前跑，让它写入的主题/地址配置被一并纳入
       - name: Run diy.sh
         run: |
           cd openwrt
           chmod +x ../diy.sh
           bash ../diy.sh
 
+      # 最后统一 defconfig，自动补全依赖
+      - name: Make defconfig
+        run: |
+          cd openwrt
+          make defconfig
+
       - name: Download sources
         run: |
           cd openwrt
-          make download -j$(nproc) || make download -j1
+          make 内部工具 -j$(nproc) || make 内部工具 -j1
 
       - name: Build firmware
         run: |
@@ -75,6 +83,7 @@ jobs:
           make -j$(nproc) || make -j1 V=s
 
       - name: Upload firmware
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: openwrt-x86_64
